@@ -544,6 +544,11 @@ RectTransform:
   m_AnchoredPosition: {x: 236, y: -228}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &352420708 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5542111180780342642, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+  m_PrefabInstance: {fileID: 2020587051}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &360535673
 GameObject:
   m_ObjectHideFlags: 0
@@ -598,6 +603,25 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &366316830 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3203261902030645159, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+  m_PrefabInstance: {fileID: 2020587051}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &366316833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366316830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d936028c19ac8794eb11fa366cc6d8a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraControl
+  _target: {fileID: 2020587057}
+  _distanceFromTarget: 5
 --- !u!1 &388464927 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1256650280681632362, guid: f821f0949c7e8414588f3300a1649999, type: 3}
@@ -1362,9 +1386,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b4186f44bd7e4016a4eda56c1a47c49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileCameraLook
-  playerCamera: {fileID: 1870704407}
+  playerBody: {fileID: 0}
   sensitivity: 2
-  smoothness: 5
+  verticalClamp: 80
 --- !u!114 &619981395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4116,11 +4140,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!4 &1870704407 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5542111180780342647, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
-  m_PrefabInstance: {fileID: 2020587051}
+--- !u!114 &1870704408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 352420708}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d936028c19ac8794eb11fa366cc6d8a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraControl
+  _target: {fileID: 2020587057}
+  _distanceFromTarget: 5
 --- !u!1 &1886454595
 GameObject:
   m_ObjectHideFlags: 0
@@ -4722,6 +4755,12 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5542111180780342642, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1870704408}
+    - targetCorrespondingSourceObject: {fileID: 3203261902030645159, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 366316833}
     - targetCorrespondingSourceObject: {fileID: 974238578668270704, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2020587056}
@@ -4822,6 +4861,11 @@ MonoBehaviour:
   health: 20
   maxHealth: 20
   maxTotalHealth: 20
+--- !u!4 &2020587057 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 490576248761790154, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+  m_PrefabInstance: {fileID: 2020587051}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2030784996
 GameObject:
   m_ObjectHideFlags: 0

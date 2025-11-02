@@ -6,108 +6,160 @@ using UnityEngine.InputSystem;
 public class PlayerAttack : MonoBehaviour
 {
     [Header("Attack Settings")]
-    public float attackRange = 2f;
-    public float attackDamage = 1f;
+    public float attackDamage = 2f;
     public float attackCooldown = 0.5f;
     public LayerMask monsterLayer;
     
     [Header("Combat Detection")]
-    public float combatDetectionRange = 5f; // Range to detect nearby enemies
-    public LayerMask enemyLayer; // Layer for detecting enemies
+    public float combatDetectionRange = 5f;
+    public LayerMask enemyLayer;
     
     [Header("Interaction Settings")]
     public float interactionRange = 3f;
-    public LayerMask interactableLayer; // Layer for NPCs/interactables
+    public LayerMask interactableLayer;
     
     [Header("Visual Feedback")]
-    public GameObject attackEffect; // Optional: attack visual effect
+    public GameObject attackEffect;
     
     [Header("Mobile Support")]
-    public MobileInputManager mobileInput; // Reference to mobile input
+    public MobileInputManager mobileInput;
     
     private float nextAttackTime = 0f;
     private Camera mainCamera;
     private Animator animator;
     private bool isInCombatStance = false;
     private bool isNearEnemy = false;
+    private MonsterAIfight nearestMonster = null;
     
     void Start()
     {
         mainCamera = Camera.main;
         animator = GetComponent<Animator>();
         
-        // Try to find mobile input manager if not assigned
         if (mobileInput == null)
         {
             mobileInput = Object.FindFirstObjectByType<MobileInputManager>();
+            if (mobileInput != null)
+            {
+                Debug.Log("Found MobileInputManager!");
+            }
+            else
+            {
+                Debug.LogWarning("MobileInputManager not found!");
+            }
+        }
+        
+        if (animator == null)
+        {
+            Debug.LogError("Animator component not found on player!");
+        }
+        else
+        {
+            Debug.Log("Animator found on player!");
         }
     }
     
     void Update()
     {
-        // Check if near enemy for combat stance
         CheckNearbyEnemies();
+        UpdateCombatStance();
         
-        // Handle attack input from both PC and Mobile
         bool attackInput = GetAttackInput();
         
-        if (attackInput && Time.time >= nextAttackTime)
+        if (attackInput)
         {
-            // Check if there's an interactable nearby first
-            if (TryInteract())
-            {
-                // Interaction happened, don't attack
-                return;
-            }
+            Debug.Log($"Attack input detected!");
             
-            // Otherwise, perform attack
-            Attack();
-            nextAttackTime = Time.time + attackCooldown;
+            if (Time.time >= nextAttackTime)
+            {
+                if (!isInCombatStance)
+                {
+                    Debug.Log("Cannot attack - not in combat mode!");
+                    return;
+                }
+                
+                if (TryInteract())
+                {
+                    Debug.Log("Interaction triggered instead of attack");
+                    return;
+                }
+                
+                Attack();
+                nextAttackTime = Time.time + attackCooldown;
+            }
+            else
+            {
+                Debug.Log("Attack on cooldown!");
+            }
         }
         
-        // Handle dedicated interact button on mobile
         if (mobileInput != null && mobileInput.IsInteractPressed())
         {
             TryInteract();
         }
-        
-        // Update combat stance animation
-        UpdateCombatStance();
     }
     
     bool GetAttackInput()
     {
-        // Check mobile input first
-        if (mobileInput != null && mobileInput.IsAttackPressed())
+        bool input = false;
+        
+        if (mobileInput != null)
         {
-            return true;
+            input = mobileInput.IsAttackPressed();
+            if (input)
+            {
+                Debug.Log("Mobile attack button detected!");
+            }
         }
         
-        // Check PC input
         #if ENABLE_INPUT_SYSTEM
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            return true;
+            Debug.Log("Mouse left click detected!");
+            input = true;
         }
         #else
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetMouseButtonDown(0))
         {
-            return true;
+            Debug.Log("Mouse button 0 detected!");
+            input = true;
         }
         #endif
         
-        return false;
+        return input;
     }
     
     void CheckNearbyEnemies()
     {
-        // Check for enemies within combat detection range
         Collider[] enemies = Physics.OverlapSphere(transform.position, combatDetectionRange, enemyLayer);
         
         bool wasNearEnemy = isNearEnemy;
         isNearEnemy = enemies.Length > 0;
         
-        // Log when entering/exiting combat zone
+        if (isNearEnemy)
+        {
+            float closestDistance = Mathf.Infinity;
+            nearestMonster = null;
+            
+            foreach (Collider enemy in enemies)
+            {
+                float distance = Vector3.Distance(transform.position, enemy.transform.position);
+                if (distance < closestDistance)
+                {
+                    MonsterAIfight monster = enemy.GetComponent<MonsterAIfight>();
+                    if (monster != null && !monster.IsMonsterDead())
+                    {
+                        nearestMonster = monster;
+                        closestDistance = distance;
+                    }
+                }
+            }
+        }
+        else
+        {
+            nearestMonster = null;
+        }
+        
         if (isNearEnemy && !wasNearEnemy)
         {
             Debug.Log("Entered combat zone!");
@@ -120,78 +172,64 @@ public class PlayerAttack : MonoBehaviour
     
     void UpdateCombatStance()
     {
-        // Enter combat stance when near enemy
         if (isNearEnemy && !isInCombatStance)
         {
             isInCombatStance = true;
             if (animator != null)
             {
                 animator.SetBool("Combat", true);
-                Debug.Log("Combat stance enabled");
+                Debug.Log("Combat stance ENABLED");
             }
         }
-        // Exit combat stance when no enemies nearby
         else if (!isNearEnemy && isInCombatStance)
         {
             isInCombatStance = false;
             if (animator != null)
             {
                 animator.SetBool("Combat", false);
-                Debug.Log("Combat stance disabled");
+                Debug.Log("Combat stance DISABLED");
             }
         }
     }
     
     void Attack()
     {
-        Debug.Log("Player attacks!");
+        Debug.Log("========== ATTACK STARTED ==========");
         
-        // Play attack animation
         if (animator != null)
         {
-            animator.SetTrigger("Attack 01"); // Matches your animator trigger
+            animator.SetTrigger("Attack 01");
+            Debug.Log("Attack 01 trigger SET");
         }
         
-        // Raycast forward from player
-        RaycastHit hit;
-        Vector3 rayOrigin = transform.position + Vector3.up; // Start from player center
-        Vector3 rayDirection = transform.forward;
-        
-        if (Physics.Raycast(rayOrigin, rayDirection, out hit, attackRange, monsterLayer))
+        if (nearestMonster != null)
         {
-            Debug.Log("Hit: " + hit.collider.name);
+            float distanceToMonster = Vector3.Distance(transform.position, nearestMonster.transform.position);
+            Debug.Log($"Attacking {nearestMonster.name} at distance: {distanceToMonster}");
             
-            // Check if we hit a monster
-            MonsterAIfight monster = hit.collider.GetComponent<MonsterAIfight>();
-            if (monster != null)
+            nearestMonster.TakeDamage(attackDamage);
+            Debug.Log($"<color=green>DAMAGED {nearestMonster.name} for {attackDamage} damage!</color>");
+            
+            if (attackEffect != null)
             {
-                monster.TakeDamage(attackDamage);
-                Debug.Log("Damaged monster!");
-                
-                // Optional: Spawn attack effect at hit point
-                if (attackEffect != null)
-                {
-                    Instantiate(attackEffect, hit.point, Quaternion.identity);
-                }
+                Vector3 effectPosition = nearestMonster.transform.position + Vector3.up;
+                Instantiate(attackEffect, effectPosition, Quaternion.identity);
             }
         }
         else
         {
-            Debug.Log("Attack missed!");
+            Debug.Log("<color=red>No monster to attack!</color>");
         }
         
-        // Visual debug ray
-        Debug.DrawRay(rayOrigin, rayDirection * attackRange, Color.red, 0.5f);
+        Debug.Log("========== ATTACK ENDED ==========");
     }
     
     bool TryInteract()
     {
-        // Check for interactables within range
         Collider[] interactables = Physics.OverlapSphere(transform.position, interactionRange, interactableLayer);
         
         if (interactables.Length > 0)
         {
-            // Find the closest interactable
             Collider closest = null;
             float closestDistance = Mathf.Infinity;
             
@@ -207,7 +245,6 @@ public class PlayerAttack : MonoBehaviour
             
             if (closest != null)
             {
-                // Try to interact with the object
                 IInteractable interactable = closest.GetComponent<IInteractable>();
                 if (interactable != null)
                 {
@@ -216,7 +253,6 @@ public class PlayerAttack : MonoBehaviour
                     return true;
                 }
                 
-                // Alternative: Use SendMessage for flexibility
                 closest.SendMessage("Interact", SendMessageOptions.DontRequireReceiver);
                 Debug.Log("Sent interact message to: " + closest.name);
                 return true;
@@ -226,26 +262,25 @@ public class PlayerAttack : MonoBehaviour
         return false;
     }
     
-    // Visualize ranges in editor
     void OnDrawGizmosSelected()
     {
-        // Attack range
-        Gizmos.color = Color.red;
-        Vector3 origin = transform.position + Vector3.up;
-        Gizmos.DrawRay(origin, transform.forward * attackRange);
-        Gizmos.DrawWireSphere(origin + transform.forward * attackRange, 0.2f);
-        
-        // Combat detection range
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, combatDetectionRange);
         
-        // Interaction range
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, interactionRange);
+        
+        if (nearestMonster != null && Application.isPlaying)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, nearestMonster.transform.position);
+            
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(nearestMonster.transform.position, 0.5f);
+        }
     }
 }
 
-// Interface for interactable objects
 public interface IInteractable
 {
     void Interact();

@@ -14,15 +14,15 @@ public class MonsterAIfight : MonoBehaviour
     public float damagePerAttack = 1f;
 
     [Header("Monster Health")]
-    public float monsterHealth = 3f;
-    public float monsterMaxHealth = 3f;
+    public float monsterHealth = 6f;
+    public float monsterMaxHealth = 6f;
 
     [Header("Game Over Settings")]
     [SerializeField] private float delayBeforeGameOver = 1f;
     [SerializeField] private float delayBeforeDeath = 0.5f;
     
     [Header("Game Win Settings")]
-    [SerializeField] private float delayBeforeGameWin = 1.5f; // Delay before showing win screen
+    [SerializeField] private float delayBeforeGameWin = 0.5f;
 
     [Header("Settings")]
     public bool useRootMotion = false;
@@ -38,7 +38,6 @@ public class MonsterAIfight : MonoBehaviour
 
     void Start()
     {
-        // Try to snap monster to NavMesh if not close enough
         NavMeshHit hit;
         if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
         {
@@ -53,14 +52,12 @@ public class MonsterAIfight : MonoBehaviour
         m_Agent = GetComponent<NavMeshAgent>();
         m_Animator = GetComponent<Animator>();
 
-        // Find the Timer script in the scene
         timerScript = Object.FindFirstObjectByType<Timer>();
         if (timerScript == null)
         {
             Debug.LogWarning("Timer script not found in scene!");
         }
 
-        // Find the PlayerStats script
         if (Target != null)
         {
             playerStats = Target.GetComponent<PlayerStats>();
@@ -70,7 +67,6 @@ public class MonsterAIfight : MonoBehaviour
             }
         }
 
-        // Disable automatic updates if using root motion
         if (useRootMotion)
         {
             m_Agent.updatePosition = false;
@@ -78,7 +74,7 @@ public class MonsterAIfight : MonoBehaviour
         }
 
         if (Target != null)
-            Debug.Log("Monster initialized. Target: " + Target.name);
+            Debug.Log($"Monster initialized. Target: {Target.name}, Health: {monsterHealth}/{monsterMaxHealth}");
     }
 
     void Update()
@@ -89,7 +85,6 @@ public class MonsterAIfight : MonoBehaviour
 
         if (m_Distance <= AttackDistance)
         {
-            // Close enough to attack
             m_Agent.isStopped = true;
 
             if (m_Animator != null)
@@ -98,7 +93,6 @@ public class MonsterAIfight : MonoBehaviour
                 m_Animator.SetBool("isWalking", false);
             }
 
-            // Face target while attacking
             Vector3 direction = (Target.position - transform.position).normalized;
             direction.y = 0;
             if (direction != Vector3.zero)
@@ -107,7 +101,6 @@ public class MonsterAIfight : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
             }
 
-            // Attack the player
             if (Time.time >= nextAttackTime)
             {
                 AttackPlayer();
@@ -116,7 +109,6 @@ public class MonsterAIfight : MonoBehaviour
         }
         else
         {
-            // Too far, chase the target
             m_Agent.isStopped = false;
             m_Agent.SetDestination(Target.position);
 
@@ -127,7 +119,6 @@ public class MonsterAIfight : MonoBehaviour
             }
         }
 
-        // Debug visualization
         Debug.DrawLine(transform.position, Target.position,
             m_Distance <= AttackDistance ? Color.red : Color.green);
     }
@@ -138,11 +129,9 @@ public class MonsterAIfight : MonoBehaviour
 
         if (!playerIsDead && playerStats != null)
         {
-            // Deal damage to the player
             playerStats.TakeDamage(damagePerAttack);
             Debug.Log($"Monster dealt {damagePerAttack} damage. Player health: {playerStats.Health}");
 
-            // Check if player died from this attack
             if (playerStats.Health <= 0)
             {
                 StartCoroutine(AttackAndTriggerGameOver());
@@ -150,7 +139,6 @@ public class MonsterAIfight : MonoBehaviour
         }
     }
 
-    // Called by player when they attack the monster
     public void TakeDamage(float damage)
     {
         if (monsterIsDead)
@@ -160,68 +148,56 @@ public class MonsterAIfight : MonoBehaviour
         }
 
         monsterHealth -= damage;
-        Debug.Log($"<color=red>Monster took {damage} damage! Remaining health: {monsterHealth}/{monsterMaxHealth}</color>");
+        Debug.Log($"<color=red>Monster took {damage} damage! Health: {monsterHealth}/{monsterMaxHealth}</color>");
 
-        // Visual feedback (optional - you can add hurt animation here)
-        if (m_Animator != null)
-        {
-            // You can trigger a hurt animation if you have one
-            // m_Animator.SetTrigger("Hurt");
-        }
-
-        // Check if monster died
         if (monsterHealth <= 0)
         {
+            monsterHealth = 0;
             Die();
         }
     }
 
-    // Alternative: Detect damage through collision (backup method)
+    public bool IsMonsterDead()
+    {
+        return monsterIsDead;
+    }
+
     void OnTriggerEnter(Collider other)
     {
-        // Check if hit by sword
         if (other.CompareTag("Weapon") || other.GetComponent<SwordCollision>() != null)
         {
             SwordCollision sword = other.GetComponent<SwordCollision>();
             if (sword != null)
             {
-                // This is handled by SwordCollision calling TakeDamage
                 Debug.Log("Monster detected sword collision!");
             }
         }
     }
 
-    // Handle monster death and trigger game win
     private void Die()
     {
         monsterIsDead = true;
-        Debug.Log("Monster has been defeated!");
+        Debug.Log("<color=yellow>========== MONSTER DEFEATED ==========</color>");
 
-        // Stop the agent
         if (m_Agent != null)
         {
             m_Agent.isStopped = true;
             m_Agent.enabled = false;
         }
 
-        // Play death animation if you have one
         if (m_Animator != null)
         {
             m_Animator.SetBool("isAttacking", false);
             m_Animator.SetBool("isWalking", false);
             
-            // Try to set death trigger/bool - check what parameter your animator uses
-            // Option 1: If you have a "Death" trigger
             if (HasParameter(m_Animator, "Death"))
             {
                 m_Animator.SetTrigger("Death");
             }
-            // Option 2: If you have an "IsDead" bool
             else if (HasParameter(m_Animator, "IsDead"))
             {
                 m_Animator.SetBool("IsDead", true);
             }
-            // Option 3: If you have a "Dead" bool
             else if (HasParameter(m_Animator, "Dead"))
             {
                 m_Animator.SetBool("Dead", true);
@@ -232,11 +208,9 @@ public class MonsterAIfight : MonoBehaviour
             }
         }
 
-        // Trigger game win sequence
         StartCoroutine(TriggerGameWin());
     }
     
-    // Helper method to check if animator has a parameter
     private bool HasParameter(Animator animator, string paramName)
     {
         foreach (AnimatorControllerParameter param in animator.parameters)
@@ -249,41 +223,34 @@ public class MonsterAIfight : MonoBehaviour
 
     private IEnumerator TriggerGameWin()
     {
-        // Wait for death animation to play
         yield return new WaitForSeconds(delayBeforeGameWin);
 
-        // Trigger game win through Timer script
+        Time.timeScale = 0f;
+        Debug.Log("<color=green>Game PAUSED! TimeScale set to 0</color>");
+
         if (timerScript != null)
         {
-            timerScript.GameWin(); // Call the GameWin method
-            Debug.Log("Game Win triggered! Monster defeated!");
+            Debug.Log("<color=green>Calling GameWin()!</color>");
+            timerScript.GameWin();
         }
         else
         {
             Debug.LogError("Cannot trigger Game Win - Timer script not found!");
         }
-
-        // Destroy the monster after showing win screen
-        yield return new WaitForSeconds(delayBeforeDeath);
-        Destroy(gameObject);
-        Debug.Log("Monster destroyed!");
     }
 
     private IEnumerator AttackAndTriggerGameOver()
     {
         playerIsDead = true;
 
-        // Play attack animation on monster
         if (m_Animator != null)
             m_Animator.SetBool("isAttacking", true);
 
-        // Trigger death animation on PLAYER
         if (Target != null)
         {
             Animator playerAnimator = Target.GetComponent<Animator>();
             if (playerAnimator != null)
             {
-                // Check which death parameter the player animator uses
                 if (HasParameter(playerAnimator, "Death"))
                 {
                     playerAnimator.SetTrigger("Death");
@@ -306,10 +273,8 @@ public class MonsterAIfight : MonoBehaviour
             }
         }
 
-        // Wait before showing game over
         yield return new WaitForSeconds(delayBeforeGameOver);
 
-        // Trigger game over through Timer script
         if (timerScript != null)
         {
             timerScript.GameOver();
@@ -323,21 +288,17 @@ public class MonsterAIfight : MonoBehaviour
 
     void OnAnimatorMove()
     {
-        // Only use this if root motion is enabled
         if (!useRootMotion) return;
 
-        // Sync the agent's position with the animator's root motion
         Vector3 position = m_Animator.rootPosition;
-        position.y = m_Agent.nextPosition.y; // Keep NavMesh Y position
+        position.y = m_Agent.nextPosition.y;
         transform.position = position;
 
-        // Update the NavMeshAgent so it knows where we are
         m_Agent.nextPosition = transform.position;
     }
 
     void OnDrawGizmosSelected()
     {
-        // Show attack range
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, AttackDistance);
 
