@@ -21,6 +21,7 @@ public class MonsterAI : MonoBehaviour
 
     [Header("Settings")]
     public bool useRootMotion = false;
+    [SerializeField] private bool showDebugInfo = true;
 
     private NavMeshAgent m_Agent;
     private Animator m_Animator;
@@ -31,41 +32,53 @@ public class MonsterAI : MonoBehaviour
 
     void Start()
     {
+        m_Agent = GetComponent<NavMeshAgent>();
+        m_Animator = GetComponent<Animator>();
+
+        Debug.Log("=== MONSTER AI INITIALIZATION ===");
+        
         // Try to snap monster to NavMesh if not close enough
         NavMeshHit hit;
         if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
         {
             transform.position = hit.position;
-            Debug.Log("Monster snapped to NavMesh at: " + hit.position);
+            Debug.Log("✓ Monster snapped to NavMesh at: " + hit.position);
         }
         else
         {
-            Debug.LogError("Monster is too far from NavMesh! Move it closer to the blue area.");
+            Debug.LogError("✗ Monster is too far from NavMesh! Move it closer to the blue area.");
+            return;
         }
 
-        m_Agent = GetComponent<NavMeshAgent>();
-        m_Animator = GetComponent<Animator>();
-
-        // Configure NavMeshAgent for movement
+        // FORCE NavMeshAgent settings
+        m_Agent.enabled = true;
+        m_Agent.speed = moveSpeed;
+        m_Agent.angularSpeed = rotationSpeed;
+        m_Agent.acceleration = 8f;
+        m_Agent.stoppingDistance = 0.5f;
+        m_Agent.autoBraking = true;
+        m_Agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        
         if (!useRootMotion)
         {
-            m_Agent.speed = moveSpeed;
-            m_Agent.angularSpeed = rotationSpeed;
-            m_Agent.acceleration = 8f;
             m_Agent.updatePosition = true;
             m_Agent.updateRotation = true;
         }
         else
         {
-            // Root motion settings
             m_Agent.updatePosition = false;
             m_Agent.updateRotation = false;
-            m_Agent.speed = moveSpeed;
         }
 
-        // Ensure the agent is active
-        m_Agent.enabled = true;
         m_Agent.isStopped = false;
+
+        // Debug all settings
+        Debug.Log($"Agent Enabled: {m_Agent.enabled}");
+        Debug.Log($"Agent Speed: {m_Agent.speed}");
+        Debug.Log($"Agent Is Stopped: {m_Agent.isStopped}");
+        Debug.Log($"Agent On NavMesh: {m_Agent.isOnNavMesh}");
+        Debug.Log($"Update Position: {m_Agent.updatePosition}");
+        Debug.Log($"Update Rotation: {m_Agent.updateRotation}");
 
         // Find the Timer script in the scene
         timerScript = Object.FindFirstObjectByType<Timer>();
@@ -76,17 +89,35 @@ public class MonsterAI : MonoBehaviour
 
         if (Target != null)
         {
-            Debug.Log("Monster initialized. Target: " + Target.name);
+            Debug.Log($"✓ Target assigned: {Target.name}");
+            float distanceToTarget = Vector3.Distance(transform.position, Target.position);
+            Debug.Log($"Distance to target: {distanceToTarget}");
         }
         else
         {
-            Debug.LogError("Monster has no target assigned!");
+            Debug.LogError("✗ NO TARGET ASSIGNED! Monster won't move without a target!");
         }
+
+        Debug.Log("=== INITIALIZATION COMPLETE ===");
     }
 
     void Update()
     {
-        if (Target == null || playerIsDead) return;
+        if (Target == null)
+        {
+            if (showDebugInfo)
+                Debug.LogWarning("Monster has no target!");
+            return;
+        }
+
+        if (playerIsDead) return;
+
+        // Check if agent is on NavMesh
+        if (!m_Agent.isOnNavMesh)
+        {
+            Debug.LogError("Monster is NOT on NavMesh!");
+            return;
+        }
 
         m_Distance = Vector3.Distance(transform.position, Target.position);
 
@@ -94,7 +125,7 @@ public class MonsterAI : MonoBehaviour
         {
             // Close enough to attack
             m_Agent.isStopped = true;
-            m_Agent.ResetPath(); // Clear the path
+            m_Agent.ResetPath();
 
             if (m_Animator != null)
             {
@@ -122,12 +153,34 @@ public class MonsterAI : MonoBehaviour
         {
             // Too far, chase the target
             m_Agent.isStopped = false;
-            m_Agent.SetDestination(Target.position);
+            
+            // Set destination
+            bool pathSet = m_Agent.SetDestination(Target.position);
+            
+            if (showDebugInfo && Time.frameCount % 60 == 0) // Log every 60 frames
+            {
+                Debug.Log($"=== MOVEMENT DEBUG ===");
+                Debug.Log($"Distance to target: {m_Distance:F2}");
+                Debug.Log($"Path set successfully: {pathSet}");
+                Debug.Log($"Has path: {m_Agent.hasPath}");
+                Debug.Log($"Path pending: {m_Agent.pathPending}");
+                Debug.Log($"Path status: {m_Agent.pathStatus}");
+                Debug.Log($"Velocity: {m_Agent.velocity.magnitude:F2}");
+                Debug.Log($"Desired velocity: {m_Agent.desiredVelocity.magnitude:F2}");
+                Debug.Log($"Is stopped: {m_Agent.isStopped}");
+                Debug.Log($"Remaining distance: {m_Agent.remainingDistance:F2}");
+            }
 
             if (m_Animator != null)
             {
                 m_Animator.SetBool("isAttacking", false);
                 m_Animator.SetBool("isWalking", true);
+                
+                // Drive animator speed parameter if it exists
+                if (m_Animator.parameters.Length > 0)
+                {
+                    m_Animator.SetFloat("Speed", m_Agent.velocity.magnitude);
+                }
             }
         }
 
@@ -135,10 +188,13 @@ public class MonsterAI : MonoBehaviour
         Debug.DrawLine(transform.position, Target.position,
             m_Distance <= AttackDistance ? Color.red : Color.green);
         
-        // Debug agent state
-        if (m_Agent.enabled)
+        // Show velocity
+        Debug.DrawRay(transform.position + Vector3.up, m_Agent.velocity, Color.blue);
+        
+        // Show destination
+        if (m_Agent.hasPath)
         {
-            Debug.DrawRay(transform.position, m_Agent.velocity, Color.blue);
+            Debug.DrawLine(transform.position, m_Agent.destination, Color.cyan);
         }
     }
 
@@ -197,6 +253,20 @@ public class MonsterAI : MonoBehaviour
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, Target.position);
+        }
+
+        // Show NavMesh status
+        if (Application.isPlaying && m_Agent != null)
+        {
+            if (m_Agent.hasPath)
+            {
+                Gizmos.color = Color.cyan;
+                Vector3[] corners = m_Agent.path.corners;
+                for (int i = 0; i < corners.Length - 1; i++)
+                {
+                    Gizmos.DrawLine(corners[i], corners[i + 1]);
+                }
+            }
         }
     }
 }
