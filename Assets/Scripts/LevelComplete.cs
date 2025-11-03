@@ -3,46 +3,54 @@ using UnityEngine.SceneManagement;
 
 public class LevelComplete : MonoBehaviour
 {
-    // Call this function when the player completes a level
+    /// <summary>
+    /// Call this when a level is completed.
+    /// Example: CompleteLevel(1) will unlock Level 2.
+    /// </summary>
     public void CompleteLevel(int levelNumber)
     {
         int nextLevel = levelNumber + 1;
 
-        // Get the current highest unlocked level (default is 1)
+        // Get the current highest unlocked level (default = 1)
         int highestUnlocked = PlayerPrefs.GetInt("UnlockedLevel", 1);
 
-        // Unlock the next level permanently
+        // Unlock the next level only if it's higher than current progress
         if (nextLevel > highestUnlocked)
         {
             PlayerPrefs.SetInt("UnlockedLevel", nextLevel);
-            PlayerPrefs.Save(); // 🔒 Saves immediately and stays even after exiting
-            Debug.Log("Progress saved: Level " + nextLevel + " unlocked!");
+            PlayerPrefs.Save();
+            Debug.Log($"✅ Progress saved: Level {nextLevel} unlocked!");
         }
 
-        // Optional: unlock individual flag for UI use
-        PlayerPrefs.SetInt("Level" + nextLevel + "Unlocked", 1);
-        PlayerPrefs.Save();
+        // Load the Level Select screen (or next scene if desired)
+        LoadLevelSelect();
+    }
 
-        // Return to level selection or next scene
-        if (Application.CanStreamedLevelBeLoaded("Level Scene"))
+    /// <summary>
+    /// Loads the Level Select screen safely.
+    /// </summary>
+    private void LoadLevelSelect()
+    {
+        // Change "Level Scene" to your actual level select scene name
+        string levelSelectScene = "Level Scene";
+
+        if (Application.CanStreamedLevelBeLoaded(levelSelectScene))
         {
-            SceneManager.LoadScene("Level Scene");
+            SceneManager.LoadScene(levelSelectScene);
         }
         else
         {
-            Debug.LogWarning("Scene 'Level Scene' not found in Build Settings!");
+            Debug.LogWarning($"⚠️ Scene '{levelSelectScene}' not found in Build Settings!");
         }
     }
 
-    // Optional: Reset progress (for testing)
+    /// <summary>
+    /// Optional: resets all progress (for testing).
+    /// </summary>
     public void ResetProgress()
     {
         PlayerPrefs.SetInt("UnlockedLevel", 1);
-        for (int i = 2; i <= 10; i++) // change 10 to your max level
-        {
-            PlayerPrefs.SetInt("Level" + i + "Unlocked", 0);
-        }
         PlayerPrefs.Save();
-        Debug.Log("Progress reset! Only Level 1 unlocked.");
+        Debug.Log("🔄 Progress reset! Only Level 1 unlocked.");
     }
 }

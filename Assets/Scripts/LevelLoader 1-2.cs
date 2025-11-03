@@ -1,26 +1,36 @@
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class LevelLoader1_2 : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    private LevelComplete levelComplete;
 
-    // Update is called once per frame
-    void Update()
+    private void Start()
     {
-
-    }
-    
-    private void OnTriggerEnter (Collider other)
-    {
-        if (other.tag == "LevelExit")    
+        // Find LevelComplete script in the scene
+        levelComplete = FindObjectOfType<LevelComplete>();
+        if (levelComplete == null)
         {
-            SceneManager.LoadScene("Level 2");
+            Debug.LogWarning("No LevelComplete script found in the scene!");
         }
-    }    
-}   
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // Check if player reached the end of the level
+        if (other.CompareTag("LevelExit"))
+        {
+            if (levelComplete != null)
+            {
+                // Mark level 1 as complete
+                levelComplete.CompleteLevel(1);
+            }
+            else
+            {
+                // Fallback in case the reference is missing
+                Debug.LogWarning("LevelComplete not found! Loading next level anyway...");
+                SceneManager.LoadScene("Level 2");
+            }
+        }
+    }
+}

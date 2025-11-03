@@ -3,25 +3,39 @@ using UnityEngine.SceneManagement;
 
 public class LevelLoader2_3 : MonoBehaviour
 {
+    private LevelComplete levelComplete;
+
+    private void Start()
+    {
+        // Locate the LevelComplete script in the scene
+        levelComplete = FindObjectOfType<LevelComplete>();
+        if (levelComplete == null)
+        {
+            Debug.LogWarning("No LevelComplete script found in the scene!");
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("TRIGGER DETECTED! Collided with: " + other.name + " | Tag: " + other.tag);
-        
-        // Check if it's the Player entering the exit
-        if (other.CompareTag("Player") || other.name == "Player")
+        // Check if the player reached the exit
+        if (other.CompareTag("Player"))
         {
-            Debug.Log("✅ Player detected! Loading Level 3...");
-            
-            // Unlock Level 3
-            PlayerPrefs.SetInt("Level3Unlocked", 1);
-            PlayerPrefs.Save();
-            Debug.Log("Level 3 unlocked and saved!");
-            
-            SceneManager.LoadScene("Level 3");
+            Debug.Log("✅ Player reached the end of Level 2!");
+
+            if (levelComplete != null)
+            {
+                // Mark Level 2 as complete (unlocks Level 3)
+                levelComplete.CompleteLevel(2);
+            }
+            else
+            {
+                Debug.LogWarning("LevelComplete not found! Loading next level anyway...");
+                SceneManager.LoadScene("Level 3");
+            }
         }
         else
         {
-            Debug.Log("❌ Not the player. Got: " + other.name);
+            Debug.Log("❌ Non-player object triggered: " + other.name);
         }
     }
 }
