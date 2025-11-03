@@ -31,8 +31,18 @@ public class MainMenuButtons : MonoBehaviour
 
     public void ConfirmExit()
     {
-        Application.Quit();
-        Debug.Log("Game is exiting");
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        if (currentScene == "Pause")
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Main menu");
+        }
+        else if (currentScene == "Main menu")
+        {
+            Application.Quit();
+            Debug.Log("Game is exiting...");
+        }
     }
 
     public void CancelExit()

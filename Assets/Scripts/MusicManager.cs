@@ -36,15 +36,27 @@ public class MusicManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Change music depending on scene
-        if (scene.name == "Main Menu")
-        {
-            PlayMusic(mainMenuMusic);
-        }
-        else if (scene.name == "Level 1")
-        {
-            PlayMusic(level1Music);
-        }
+    // IGNORE if this is just an additive scene being loaded/unloaded
+    if (mode == LoadSceneMode.Additive)
+        return;
+
+    // Stop any currently playing music before switching
+    musicSource.Stop();
+
+    string sceneName = scene.name.ToLower();
+
+    // Skip MusicManager music for any cutscene scene
+    if (sceneName.Contains("cutscene"))
+        return;
+
+    if (sceneName.Contains("main"))
+    {
+        PlayMusic(mainMenuMusic);
+    }
+    else if (sceneName.Contains("level 1") || sceneName.Contains("level1"))
+    {
+        PlayMusic(level1Music);
+    }
     }
 
     public void PlayMusic(AudioClip clip)

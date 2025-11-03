@@ -119,6 +119,56 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &37075017
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 37075019}
+  - component: {fileID: 37075018}
+  m_Layer: 0
+  m_Name: PauseSceneManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &37075018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 37075017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639f836a6c2f44548b611a7cd1a97099, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseSceneManager
+  continueButton: {fileID: 0}
+  newGameButton: {fileID: 0}
+  exitButton: {fileID: 0}
+  exitConfirmationPanel: {fileID: 0}
+  confirmExitButton: {fileID: 0}
+  cancelExitButton: {fileID: 0}
+--- !u!4 &37075019
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 37075017}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1244.935, y: 542.1585, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &99528037
 GameObject:
   m_ObjectHideFlags: 0
@@ -181,7 +231,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PauseSceneManager
   continueButton: {fileID: 1485149956}
   newGameButton: {fileID: 2034430784}
-  optionsButton: {fileID: 0}
   exitButton: {fileID: 1146978388}
   exitConfirmationPanel: {fileID: 512473139}
   confirmExitButton: {fileID: 504186458}
@@ -645,7 +694,6 @@ GameObject:
   m_Component:
   - component: {fileID: 754887110}
   - component: {fileID: 754887109}
-  - component: {fileID: 754887108}
   - component: {fileID: 754887111}
   m_Layer: 0
   m_Name: Main Camera
@@ -654,14 +702,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &754887108
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 754887107}
-  m_Enabled: 1
 --- !u!20 &754887109
 Camera:
   m_ObjectHideFlags: 0
@@ -1809,9 +1849,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1679410406}
-        m_TargetAssemblyTypeName: MainMenuButtons, Assembly-CSharp
-        m_MethodName: ContinueGame
+      - m_Target: {fileID: 112317070}
+        m_TargetAssemblyTypeName: PauseSceneManager, Assembly-CSharp
+        m_MethodName: OnContinueClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2442,7 +2482,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1679410406}
         m_TargetAssemblyTypeName: MainMenuButtons, Assembly-CSharp
-        m_MethodName: ContinueGame
+        m_MethodName: NewGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2552,3 +2592,4 @@ SceneRoots:
   - {fileID: 99528038}
   - {fileID: 1679410407}
   - {fileID: 700667549}
+  - {fileID: 37075019}
