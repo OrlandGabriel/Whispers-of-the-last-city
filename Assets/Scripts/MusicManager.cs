@@ -11,7 +11,7 @@ public class MusicManager : MonoBehaviour
 
     [Header("Music Clips")]
     [SerializeField] private AudioClip mainMenuMusic;
-    [SerializeField] private AudioClip level1Music;
+    [SerializeField] private AudioClip levelMusic; // Used for all game levels
 
     void Awake()
     {
@@ -31,32 +31,41 @@ public class MusicManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-    // IGNORE if this is just an additive scene being loaded/unloaded
-    if (mode == LoadSceneMode.Additive)
-        return;
+        // Ignore additive loads
+        if (mode == LoadSceneMode.Additive)
+            return;
 
-    // Stop any currently playing music before switching
-    musicSource.Stop();
+        string sceneName = scene.name.ToLower();
 
-    string sceneName = scene.name.ToLower();
+        // Cutscene scenes: no music change
+        if (sceneName.Contains("cutscene"))
+            return;
 
-    // Skip MusicManager music for any cutscene scene
-    if (sceneName.Contains("cutscene"))
-        return;
-
-    if (sceneName.Contains("main"))
-    {
-        PlayMusic(mainMenuMusic);
-    }
-    else if (sceneName.Contains("level 1") || sceneName.Contains("level1"))
-    {
-        PlayMusic(level1Music);
-    }
+        // Only switch music if we’re in main menu or game
+        if (sceneName.Contains("main"))
+        {
+            // If we're already playing this track, don't restart
+            if (musicSource.clip != mainMenuMusic)
+                PlayMusic(mainMenuMusic);
+        }
+        else if (sceneName.Contains("level"))
+        {
+            // If we're already playing the same level track, don't restart
+            if (musicSource.clip != levelMusic)
+                PlayMusic(levelMusic);
+        }
+        else
+        {
+            // Default behavior — continue playing current track
+            if (!musicSource.isPlaying)
+                musicSource.Play();
+        }
     }
 
     public void PlayMusic(AudioClip clip)
@@ -64,10 +73,10 @@ public class MusicManager : MonoBehaviour
         if (musicSource == null || clip == null)
             return;
 
+        // Already playing this clip? do nothing
         if (musicSource.clip == clip && musicSource.isPlaying)
-            return; // already playing the right one
+            return;
 
-        musicSource.Stop();
         musicSource.clip = clip;
         musicSource.loop = true;
         musicSource.Play();
