@@ -15,9 +15,9 @@ public class MonsterAI : MonoBehaviour
 
     [Header("Roaming Settings")]
     [SerializeField] private bool enableRoaming = true;
-    [SerializeField] private float roamRadius = 10f; // How far from spawn point to roam
-    [SerializeField] private float roamWaitTime = 2f; // Wait time at each roam point
-    [SerializeField] private float idleTimeBeforeRoam = 1f; // Time to wait before picking new roam point
+    [SerializeField] private float roamRadius = 10f;
+    [SerializeField] private float roamWaitTime = 2f;
+    [SerializeField] private float idleTimeBeforeRoam = 1f;
 
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 3.5f;
@@ -42,16 +42,16 @@ public class MonsterAI : MonoBehaviour
     private bool isRoaming = false;
     private bool isWaiting = false;
     private float waitTimer = 0f;
+    private Vector3 currentRoamPoint;
 
     void Start()
     {
         m_Agent = GetComponent<NavMeshAgent>();
         m_Animator = GetComponent<Animator>();
 
-        // Save spawn point for roaming
         spawnPoint = transform.position;
 
-        // Try to snap monster to NavMesh if not close enough
+        // Ensure monster starts on NavMesh
         NavMeshHit hit;
         if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
         {
@@ -62,105 +62,73 @@ public class MonsterAI : MonoBehaviour
         else
         {
             Debug.LogError("✗ Monster is too far from NavMesh!");
+            enabled = false;
             return;
         }
 
-        // Configure NavMeshAgent
+        // Configure NavMesh Agent
         m_Agent.enabled = true;
         m_Agent.speed = moveSpeed;
         m_Agent.angularSpeed = rotationSpeed;
         m_Agent.acceleration = 8f;
         m_Agent.stoppingDistance = 0.5f;
         m_Agent.autoBraking = true;
-        
+
         if (!useRootMotion)
         {
             m_Agent.updatePosition = true;
             m_Agent.updateRotation = true;
         }
-        else
-        {
-            m_Agent.updatePosition = false;
-            m_Agent.updateRotation = false;
-        }
 
-        m_Agent.isStopped = false;
-
-        // Find the Timer script
         timerScript = Object.FindFirstObjectByType<Timer>();
-        if (timerScript == null && showDebugInfo)
-        {
-            Debug.LogWarning("Timer script not found in scene!");
-        }
 
         if (Target == null)
         {
             Debug.LogError("✗ NO TARGET ASSIGNED! Monster won't chase without a target!");
         }
-
-        if (showDebugInfo) Debug.Log("Monster AI initialized successfully");
     }
 
     void Update()
     {
-        if (playerIsDead) return;
+        if (playerIsDead || !m_Agent.isOnNavMesh) return;
 
-        // Check if agent is on NavMesh
-        if (!m_Agent.isOnNavMesh)
-        {
-            Debug.LogError("Monster is NOT on NavMesh!");
-            return;
-        }
-
-        // Calculate distance to target
         if (Target != null)
-        {
             m_Distance = Vector3.Distance(transform.position, Target.position);
-        }
 
-        // Decide behavior based on player distance
+        // --- DETECTION LOGIC ---
         if (Target != null && m_Distance <= detectionRange)
         {
-            // Player is in range - chase or attack
-            isRoaming = false;
+            // Player detected
+            StopAllCoroutines(); // stop roaming coroutine if any
             isWaiting = false;
+            isRoaming = false;
 
             if (m_Distance <= AttackDistance)
-            {
                 AttackBehavior();
-            }
             else
-            {
                 ChaseBehavior();
-            }
         }
         else
         {
-            // Player is out of range or no target - roam
+            // Player not detected
             if (enableRoaming)
-            {
                 RoamBehavior();
-            }
             else
-            {
                 IdleBehavior();
-            }
         }
 
-        // Debug visualization
+        // Debug Lines
         if (Target != null)
         {
             Debug.DrawLine(transform.position, Target.position,
-                m_Distance <= AttackDistance ? Color.red : 
+                m_Distance <= AttackDistance ? Color.red :
                 m_Distance <= detectionRange ? Color.yellow : Color.gray);
         }
     }
 
     void AttackBehavior()
     {
-        // Stop and attack
         m_Agent.isStopped = true;
-        m_Agent.ResetPath();
 
         if (m_Animator != null)
         {
@@ -168,7 +136,7 @@ public class MonsterAI : MonoBehaviour
             m_Animator.SetBool("isWalking", false);
         }
 
-        // Face target
+        // Face the target
         Vector3 direction = (Target.position - transform.position).normalized;
         direction.y = 0;
         if (direction != Vector3.zero)
@@ -177,7 +145,7 @@ public class MonsterAI : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
         }
 
-        // Execute attack
+        // Perform attack if cooldown expired
         if (Time.time >= nextAttackTime)
         {
             AttackPlayer();
@@ -187,7 +155,6 @@ public class MonsterAI : MonoBehaviour
 
     void ChaseBehavior()
     {
-        // Chase the player
         m_Agent.isStopped = false;
         m_Agent.SetDestination(Target.position);
 
@@ -196,98 +163,72 @@ public class MonsterAI : MonoBehaviour
             m_Animator.SetBool("isAttacking", false);
             m_Animator.SetBool("isWalking", true);
         }
-
-        if (showDebugInfo)
-        {
-            Debug.DrawLine(transform.position, Target.position, Color.green);
-        }
     }
 
     void RoamBehavior()
     {
         if (m_Animator != null)
-        {
             m_Animator.SetBool("isAttacking", false);
-        }
 
-        // Handle waiting at roam point
         if (isWaiting)
         {
             waitTimer -= Time.deltaTime;
             m_Agent.isStopped = true;
-            
+
             if (m_Animator != null)
-            {
                 m_Animator.SetBool("isWalking", false);
-            }
 
             if (waitTimer <= 0f)
             {
                 isWaiting = false;
-                isRoaming = false;
-                PickNewRoamPoint(); // Pick new point after waiting
+                PickNewRoamPoint();
             }
             return;
         }
 
-        // Check if we've reached the roam destination
         if (isRoaming && m_Agent.hasPath)
         {
-            // Check if close to destination
-            if (m_Agent.remainingDistance <= m_Agent.stoppingDistance + 0.5f && !m_Agent.pathPending)
+            if (!m_Agent.pathPending && m_Agent.remainingDistance <= m_Agent.stoppingDistance + 0.2f)
             {
-                // Reached roam point, start waiting
+                // Arrived at roam point
+                isRoaming = false;
                 isWaiting = true;
                 waitTimer = roamWaitTime;
-                isRoaming = false;
                 if (showDebugInfo) Debug.Log("Reached roam point, waiting...");
-                return;
-            }
-
-            // Still moving to roam point
-            if (m_Animator != null)
-            {
-                m_Animator.SetBool("isWalking", m_Agent.velocity.magnitude > 0.1f);
             }
         }
-        else
+        else if (!isRoaming && !isWaiting)
         {
-            // Not roaming or lost path, pick new point
             PickNewRoamPoint();
         }
+
+        if (m_Animator != null)
+            m_Animator.SetBool("isWalking", m_Agent.velocity.magnitude > 0.1f);
     }
 
     void PickNewRoamPoint()
     {
-        // Try multiple times to find a valid roam point
         for (int i = 0; i < 10; i++)
         {
-            // Generate random point around spawn
             Vector2 randomCircle = Random.insideUnitCircle * roamRadius;
-            Vector3 randomPoint = spawnPoint + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            Vector3 randomPoint = spawnPoint + new Vector3(randomCircle.x, 0, randomCircle.y);
 
-            NavMeshHit navHit;
-            if (NavMesh.SamplePosition(randomPoint, out navHit, roamRadius, NavMesh.AllAreas))
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(randomPoint, out hit, roamRadius, NavMesh.AllAreas))
             {
-                // Found valid point on NavMesh
+                currentRoamPoint = hit.position;
                 m_Agent.isStopped = false;
-                bool pathSet = m_Agent.SetDestination(navHit.position);
-                
-                if (pathSet)
-                {
-                    isRoaming = true;
-                    if (showDebugInfo)
-                    {
-                        Debug.Log($"New roam point set: {navHit.position}");
-                        Debug.DrawLine(transform.position, navHit.position, Color.blue, roamWaitTime);
-                    }
-                    return;
-                }
+                m_Agent.SetDestination(currentRoamPoint);
+                isRoaming = true;
+
+                if (showDebugInfo)
+                    Debug.DrawLine(transform.position, currentRoamPoint, Color.blue, 2f);
+
+                return;
             }
         }
 
-        // Couldn't find valid point after 10 tries
-        if (showDebugInfo) Debug.LogWarning("Could not find valid roam point on NavMesh!");
+        if (showDebugInfo) Debug.LogWarning("Failed to find valid roam point.");
         isWaiting = true;
         waitTimer = idleTimeBeforeRoam;
     }
@@ -295,7 +236,7 @@ public class MonsterAI : MonoBehaviour
     void IdleBehavior()
     {
         m_Agent.isStopped = true;
-        
+
         if (m_Animator != null)
         {
             m_Animator.SetBool("isAttacking", false);
@@ -305,8 +246,6 @@ public class MonsterAI : MonoBehaviour
 
     void AttackPlayer()
     {
-        if (showDebugInfo) Debug.Log("Monster attacks player!");
-
         if (!playerIsDead)
             StartCoroutine(AttackAndTriggerGameOver());
     }
@@ -321,14 +260,9 @@ public class MonsterAI : MonoBehaviour
         yield return new WaitForSeconds(delayBeforeGameOver);
 
         if (timerScript != null)
-        {
             timerScript.GameOver();
-            Debug.Log("Game Over triggered by Monster!");
-        }
         else
-        {
-            Debug.LogError("Cannot trigger Game Over - Timer script not found!");
-        }
+            Debug.LogError("Timer script missing!");
     }
 
     void OnAnimatorMove()
@@ -343,15 +277,12 @@ public class MonsterAI : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        // Show attack range
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, AttackDistance);
 
-        // Show detection range
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
-        // Show roam radius from spawn point
         if (enableRoaming)
         {
             Gizmos.color = Color.blue;
