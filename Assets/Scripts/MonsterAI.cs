@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.SceneManagement;
 using System.Collections;
-using TMPro;
 
 [RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(CapsuleCollider))] // ensure collider for detection
 public class MonsterAI : MonoBehaviour
 {
     [Header("Target & Combat")]
@@ -47,13 +46,17 @@ public class MonsterAI : MonoBehaviour
     private float waitTimer = 0f;
     private Vector3 currentRoamPoint;
 
+    // Chase control
+    private float chaseUpdateRate = 0.25f;
+    private float chaseTimer = 0f;
+
     void Start()
     {
         m_Agent = GetComponent<NavMeshAgent>();
         m_Animator = GetComponent<Animator>();
         spawnPoint = transform.position;
 
-        // Ensure monster starts on NavMesh
+        // Make sure monster is on the NavMesh
         if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10f, NavMesh.AllAreas))
         {
             transform.position = hit.position;
@@ -67,7 +70,7 @@ public class MonsterAI : MonoBehaviour
             return;
         }
 
-        // Configure NavMesh Agent
+        // Configure NavMeshAgent
         m_Agent.enabled = true;
         m_Agent.speed = moveSpeed;
         m_Agent.angularSpeed = rotationSpeed;
@@ -83,14 +86,14 @@ public class MonsterAI : MonoBehaviour
 
         timerScript = Object.FindFirstObjectByType<Timer>();
 
-        // ✅ Automatically find player if not assigned
+        // Auto-find Player if not manually assigned
         if (Target == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null)
             {
                 Target = playerObj.transform;
-                if (showDebugInfo) Debug.Log("✓ Player found and assigned as target.");
+                if (showDebugInfo) Debug.Log("✓ Player found and assigned as target: " + Target.name);
             }
             else
             {
@@ -117,7 +120,6 @@ public class MonsterAI : MonoBehaviour
                 {
                     Vector3 directionToPlayer = (Target.position - transform.position).normalized;
                     float angle = Vector3.Angle(transform.forward, directionToPlayer);
-
                     if (angle < fieldOfViewAngle / 2f)
                         playerDetected = true;
                 }
@@ -149,7 +151,7 @@ public class MonsterAI : MonoBehaviour
         }
 
         // Debug Lines
-        if (Target != null)
+        if (Target != null && showDebugInfo)
         {
             Debug.DrawLine(transform.position, Target.position,
                 m_Distance <= AttackDistance ? Color.red :
@@ -187,7 +189,17 @@ public class MonsterAI : MonoBehaviour
     void ChaseBehavior()
     {
         m_Agent.isStopped = false;
-        m_Agent.SetDestination(Target.position);
+
+        chaseTimer -= Time.deltaTime;
+        if (chaseTimer <= 0f && Target != null)
+        {
+            // Update destination every few frames for smoother chasing
+            m_Agent.SetDestination(Target.position);
+            chaseTimer = chaseUpdateRate;
+
+            if (showDebugInfo)
+                Debug.Log($"Chasing {Target.name} at {Target.position}");
+        }
 
         if (m_Animator != null)
         {
@@ -323,6 +335,25 @@ public class MonsterAI : MonoBehaviour
         {
             Gizmos.color = Color.cyan;
             Gizmos.DrawLine(transform.position, Target.position);
+        }
+    }
+
+    // --- Optional trigger detection (requires collider + kinematic rigidbody) ---
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            Target = other.transform;
+            if (showDebugInfo) Debug.Log("Player entered detection range!");
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            if (showDebugInfo) Debug.Log("Player left detection range.");
+            Target = null;
         }
     }
 }
