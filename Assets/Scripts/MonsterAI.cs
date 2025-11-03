@@ -12,6 +12,10 @@ public class MonsterAI : MonoBehaviour
     public float AttackDistance = 2f;
     public float attackCooldown = 1.5f;
 
+    [Header("Movement Settings")]
+    [SerializeField] private float moveSpeed = 3.5f;
+    [SerializeField] private float rotationSpeed = 120f;
+
     [Header("Game Over Settings")]
     [SerializeField] private float delayBeforeGameOver = 1f;
 
@@ -42,6 +46,27 @@ public class MonsterAI : MonoBehaviour
         m_Agent = GetComponent<NavMeshAgent>();
         m_Animator = GetComponent<Animator>();
 
+        // Configure NavMeshAgent for movement
+        if (!useRootMotion)
+        {
+            m_Agent.speed = moveSpeed;
+            m_Agent.angularSpeed = rotationSpeed;
+            m_Agent.acceleration = 8f;
+            m_Agent.updatePosition = true;
+            m_Agent.updateRotation = true;
+        }
+        else
+        {
+            // Root motion settings
+            m_Agent.updatePosition = false;
+            m_Agent.updateRotation = false;
+            m_Agent.speed = moveSpeed;
+        }
+
+        // Ensure the agent is active
+        m_Agent.enabled = true;
+        m_Agent.isStopped = false;
+
         // Find the Timer script in the scene
         timerScript = Object.FindFirstObjectByType<Timer>();
         if (timerScript == null)
@@ -49,15 +74,14 @@ public class MonsterAI : MonoBehaviour
             Debug.LogWarning("Timer script not found in scene!");
         }
 
-        // Disable automatic updates if using root motion
-        if (useRootMotion)
-        {
-            m_Agent.updatePosition = false;
-            m_Agent.updateRotation = false;
-        }
-
         if (Target != null)
+        {
             Debug.Log("Monster initialized. Target: " + Target.name);
+        }
+        else
+        {
+            Debug.LogError("Monster has no target assigned!");
+        }
     }
 
     void Update()
@@ -70,6 +94,7 @@ public class MonsterAI : MonoBehaviour
         {
             // Close enough to attack
             m_Agent.isStopped = true;
+            m_Agent.ResetPath(); // Clear the path
 
             if (m_Animator != null)
             {
@@ -109,6 +134,12 @@ public class MonsterAI : MonoBehaviour
         // Debug visualization
         Debug.DrawLine(transform.position, Target.position,
             m_Distance <= AttackDistance ? Color.red : Color.green);
+        
+        // Debug agent state
+        if (m_Agent.enabled)
+        {
+            Debug.DrawRay(transform.position, m_Agent.velocity, Color.blue);
+        }
     }
 
     void AttackPlayer()
