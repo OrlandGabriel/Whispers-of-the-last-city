@@ -3,33 +3,29 @@ using UnityEngine.SceneManagement;
 
 public class LevelComplete : MonoBehaviour
 {
-    // Call this function when the player completes a level
-    public void CompleteLevel(int levelNumber)
+    public void CompleteLevel()
     {
-        // Unlock the next level
-        if (levelNumber == 1)
+        // Get the current level index (based on Build Settings order)
+        int currentLevel = SceneManager.GetActiveScene().buildIndex;
+        int nextLevel = currentLevel + 1;
+
+        // Save the highest level the player has unlocked
+        if (PlayerPrefs.GetInt("UnlockedLevel", 1) < nextLevel)
         {
-            PlayerPrefs.SetInt("Level2Unlocked", 1);
-            Debug.Log("Level 2 unlocked!");
+            PlayerPrefs.SetInt("UnlockedLevel", nextLevel);
+            PlayerPrefs.Save();
+            Debug.Log("Unlocked Level " + nextLevel);
         }
-        else if (levelNumber == 2)
-        {
-            PlayerPrefs.SetInt("Level3Unlocked", 1);
-            Debug.Log("Level 3 unlocked!");
-        }
-        
-        PlayerPrefs.Save();
-        
-        // Go back to level select
+
+        // Return to the level select scene (change to your actual scene name)
         SceneManager.LoadScene("Level Scene");
     }
-    
-    // For testing - reset all progress
+
+    // Optional: Reset all progress (for testing)
     public void ResetProgress()
     {
-        PlayerPrefs.SetInt("Level2Unlocked", 0);
-        PlayerPrefs.SetInt("Level3Unlocked", 0);
+        PlayerPrefs.SetInt("UnlockedLevel", 1);
         PlayerPrefs.Save();
-        Debug.Log("Progress reset!");
+        Debug.Log("Progress reset. Only Level 1 unlocked.");
     }
 }
