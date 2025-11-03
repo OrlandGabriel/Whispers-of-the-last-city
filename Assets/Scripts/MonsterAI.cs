@@ -11,7 +11,10 @@ public class MonsterAI : MonoBehaviour
     public Transform Target;
     public float AttackDistance = 2f;
     public float attackCooldown = 1.5f;
-    public float detectionRange = 15f; // How far monster can detect player
+    public float detectionRange = 15f;
+    [Tooltip("Monster only detects player if inside view angle")]
+    public bool useFieldOfView = false;
+    [Range(10f, 180f)] public float fieldOfViewAngle = 120f;
 
     [Header("Roaming Settings")]
     [SerializeField] private bool enableRoaming = true;
@@ -48,12 +51,10 @@ public class MonsterAI : MonoBehaviour
     {
         m_Agent = GetComponent<NavMeshAgent>();
         m_Animator = GetComponent<Animator>();
-
         spawnPoint = transform.position;
 
         // Ensure monster starts on NavMesh
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10f, NavMesh.AllAreas))
         {
             transform.position = hit.position;
             spawnPoint = hit.position;
@@ -82,9 +83,19 @@ public class MonsterAI : MonoBehaviour
 
         timerScript = Object.FindFirstObjectByType<Timer>();
 
+        // ✅ Automatically find player if not assigned
         if (Target == null)
         {
-            Debug.LogError("✗ NO TARGET ASSIGNED! Monster won't chase without a target!");
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                Target = playerObj.transform;
+                if (showDebugInfo) Debug.Log("✓ Player found and assigned as target.");
+            }
+            else
+            {
+                Debug.LogError("✗ No player found! Tag your player as 'Player'.");
+            }
         }
     }
 
@@ -95,11 +106,31 @@ public class MonsterAI : MonoBehaviour
         if (Target != null)
             m_Distance = Vector3.Distance(transform.position, Target.position);
 
+        bool playerDetected = false;
+
         // --- DETECTION LOGIC ---
-        if (Target != null && m_Distance <= detectionRange)
+        if (Target != null)
         {
-            // Player detected
-            StopAllCoroutines(); // stop roaming coroutine if any
+            if (m_Distance <= detectionRange)
+            {
+                if (useFieldOfView)
+                {
+                    Vector3 directionToPlayer = (Target.position - transform.position).normalized;
+                    float angle = Vector3.Angle(transform.forward, directionToPlayer);
+
+                    if (angle < fieldOfViewAngle / 2f)
+                        playerDetected = true;
+                }
+                else
+                {
+                    playerDetected = true;
+                }
+            }
+        }
+
+        if (playerDetected)
+        {
+            StopAllCoroutines(); // stop roaming
             isWaiting = false;
             isRoaming = false;
 
@@ -110,7 +141,7 @@ public class MonsterAI : MonoBehaviour
         }
         else
         {
-            // Player not detected
+            // Player not detected → return to roaming
             if (enableRoaming)
                 RoamBehavior();
             else
@@ -190,7 +221,6 @@ public class MonsterAI : MonoBehaviour
         {
             if (!m_Agent.pathPending && m_Agent.remainingDistance <= m_Agent.stoppingDistance + 0.2f)
             {
-                // Arrived at roam point
                 isRoaming = false;
                 isWaiting = true;
                 waitTimer = roamWaitTime;
@@ -213,8 +243,7 @@ public class MonsterAI : MonoBehaviour
             Vector2 randomCircle = Random.insideUnitCircle * roamRadius;
             Vector3 randomPoint = spawnPoint + new Vector3(randomCircle.x, 0, randomCircle.y);
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(randomPoint, out hit, roamRadius, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(randomPoint, out NavMeshHit hit, roamRadius, NavMesh.AllAreas))
             {
                 currentRoamPoint = hit.position;
                 m_Agent.isStopped = false;
