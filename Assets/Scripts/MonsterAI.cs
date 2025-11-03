@@ -214,6 +214,7 @@ public class MonsterAI : MonoBehaviour
         if (isWaiting)
         {
             waitTimer -= Time.deltaTime;
+            m_Agent.isStopped = true;
             
             if (m_Animator != null)
             {
@@ -224,46 +225,71 @@ public class MonsterAI : MonoBehaviour
             {
                 isWaiting = false;
                 isRoaming = false;
+                PickNewRoamPoint(); // Pick new point after waiting
             }
             return;
         }
 
-        // Check if we need to pick a new roam point
-        if (!isRoaming || !m_Agent.hasPath || m_Agent.remainingDistance < 0.5f)
+        // Check if we've reached the roam destination
+        if (isRoaming && m_Agent.hasPath)
         {
-            if (isRoaming && m_Agent.remainingDistance < 0.5f)
+            // Check if close to destination
+            if (m_Agent.remainingDistance <= m_Agent.stoppingDistance + 0.5f && !m_Agent.pathPending)
             {
-                // Reached roam point, wait before picking new one
+                // Reached roam point, start waiting
                 isWaiting = true;
                 waitTimer = roamWaitTime;
-                m_Agent.isStopped = true;
+                isRoaming = false;
+                if (showDebugInfo) Debug.Log("Reached roam point, waiting...");
                 return;
             }
 
-            // Pick new random roam point
-            Vector3 randomDirection = Random.insideUnitSphere * roamRadius;
-            randomDirection += spawnPoint;
-            randomDirection.y = transform.position.y; // Keep same height
+            // Still moving to roam point
+            if (m_Animator != null)
+            {
+                m_Animator.SetBool("isWalking", m_Agent.velocity.magnitude > 0.1f);
+            }
+        }
+        else
+        {
+            // Not roaming or lost path, pick new point
+            PickNewRoamPoint();
+        }
+    }
+
+    void PickNewRoamPoint()
+    {
+        // Try multiple times to find a valid roam point
+        for (int i = 0; i < 10; i++)
+        {
+            // Generate random point around spawn
+            Vector2 randomCircle = Random.insideUnitCircle * roamRadius;
+            Vector3 randomPoint = spawnPoint + new Vector3(randomCircle.x, 0f, randomCircle.y);
 
             NavMeshHit navHit;
-            if (NavMesh.SamplePosition(randomDirection, out navHit, roamRadius, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(randomPoint, out navHit, roamRadius, NavMesh.AllAreas))
             {
+                // Found valid point on NavMesh
                 m_Agent.isStopped = false;
-                m_Agent.SetDestination(navHit.position);
-                isRoaming = true;
-
-                if (showDebugInfo)
+                bool pathSet = m_Agent.SetDestination(navHit.position);
+                
+                if (pathSet)
                 {
-                    Debug.DrawLine(transform.position, navHit.position, Color.blue, 2f);
+                    isRoaming = true;
+                    if (showDebugInfo)
+                    {
+                        Debug.Log($"New roam point set: {navHit.position}");
+                        Debug.DrawLine(transform.position, navHit.position, Color.blue, roamWaitTime);
+                    }
+                    return;
                 }
             }
         }
 
-        // Update walking animation
-        if (m_Animator != null && m_Agent.velocity.magnitude > 0.1f)
-        {
-            m_Animator.SetBool("isWalking", true);
-        }
+        // Couldn't find valid point after 10 tries
+        if (showDebugInfo) Debug.LogWarning("Could not find valid roam point on NavMesh!");
+        isWaiting = true;
+        waitTimer = idleTimeBeforeRoam;
     }
 
     void IdleBehavior()
