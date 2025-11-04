@@ -29,7 +29,7 @@ namespace StarterAssets
 
         [Header("Mobile Look Settings")]
         public bool enableTouchLook = true;
-        [Range(0.05f, 0.5f)] public float touchSensitivity = 0.15f;
+        [Range(0.05f, 0.5f)] public float touchSensitivity = 1.5f;
 
         private int activeTouchId = -1;
         private Vector2 lastTouchPosition;
