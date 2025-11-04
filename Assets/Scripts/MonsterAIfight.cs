@@ -20,12 +20,15 @@ public class MonsterAIfight : MonoBehaviour
     [Header("Game Over Settings")]
     [SerializeField] private float delayBeforeGameOver = 1f;
     [SerializeField] private float delayBeforeDeath = 0.5f;
-    
+
     [Header("Game Win Settings")]
     [SerializeField] private float delayBeforeGameWin = 0.5f;
 
     [Header("Settings")]
     public bool useRootMotion = false;
+
+    [Header("Debug")]
+    public bool showDebugLogs = true;
 
     private NavMeshAgent m_Agent;
     private Animator m_Animator;
@@ -35,18 +38,43 @@ public class MonsterAIfight : MonoBehaviour
     private bool monsterIsDead = false;
     private Timer timerScript;
     private PlayerStats playerStats;
+    private Collider monsterCollider;
 
     void Start()
     {
+        // Ensure monster has a collider for detection
+        monsterCollider = GetComponent<Collider>();
+        if (monsterCollider == null)
+        {
+            Debug.LogError($"[{gameObject.name}] NO COLLIDER FOUND! Adding BoxCollider...");
+            monsterCollider = gameObject.AddComponent<BoxCollider>();
+        }
+        else
+        {
+            if (showDebugLogs) Debug.Log($"[{gameObject.name}] Collider found: {monsterCollider.GetType().Name}");
+        }
+
+        // Make sure collider is not a trigger (so Physics.OverlapSphere can detect it)
+        if (monsterCollider.isTrigger)
+        {
+            Debug.LogWarning($"[{gameObject.name}] Collider was set as trigger! This may prevent damage detection.");
+        }
+
+        // Check layer
+        if (showDebugLogs)
+        {
+            Debug.Log($"[{gameObject.name}] Layer: {LayerMask.LayerToName(gameObject.layer)} (Layer #{gameObject.layer})");
+        }
+
         NavMeshHit hit;
         if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
         {
             transform.position = hit.position;
-            Debug.Log("Monster snapped to NavMesh at: " + hit.position);
+            if (showDebugLogs) Debug.Log($"[{gameObject.name}] Snapped to NavMesh at: {hit.position}");
         }
         else
         {
-            Debug.LogError("Monster is too far from NavMesh! Move it closer to the blue area.");
+            Debug.LogError($"[{gameObject.name}] Too far from NavMesh! Move it closer to the blue area.");
         }
 
         m_Agent = GetComponent<NavMeshAgent>();
@@ -74,7 +102,7 @@ public class MonsterAIfight : MonoBehaviour
         }
 
         if (Target != null)
-            Debug.Log($"Monster initialized. Target: {Target.name}, Health: {monsterHealth}/{monsterMaxHealth}");
+            Debug.Log($"[{gameObject.name}] Monster initialized. Target: {Target.name}, Health: {monsterHealth}/{monsterMaxHealth}");
     }
 
     void Update()
@@ -125,12 +153,12 @@ public class MonsterAIfight : MonoBehaviour
 
     void AttackPlayer()
     {
-        Debug.Log("Monster attacks player!");
+        if (showDebugLogs) Debug.Log($"[{gameObject.name}] Monster attacks player!");
 
         if (!playerIsDead && playerStats != null)
         {
             playerStats.TakeDamage(damagePerAttack);
-            Debug.Log($"Monster dealt {damagePerAttack} damage. Player health: {playerStats.Health}");
+            if (showDebugLogs) Debug.Log($"[{gameObject.name}] Dealt {damagePerAttack} damage. Player health: {playerStats.Health}");
 
             if (playerStats.Health <= 0)
             {
@@ -139,16 +167,28 @@ public class MonsterAIfight : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Called by PlayerAttack script to damage this monster
+    /// </summary>
     public void TakeDamage(float damage)
     {
         if (monsterIsDead)
         {
-            Debug.Log("Monster is already dead, ignoring damage.");
+            if (showDebugLogs) Debug.Log($"[{gameObject.name}] Already dead, ignoring damage.");
             return;
         }
 
         monsterHealth -= damage;
-        Debug.Log($"<color=red>Monster took {damage} damage! Health: {monsterHealth}/{monsterMaxHealth}</color>");
+        Debug.Log($"<color=red>[{gameObject.name}] ✓ TOOK {damage} DAMAGE! Health: {monsterHealth}/{monsterMaxHealth}</color>");
+
+        // Optional: Play hit animation
+        if (m_Animator != null)
+        {
+            if (HasParameter(m_Animator, "Hit"))
+            {
+                m_Animator.SetTrigger("Hit");
+            }
+        }
 
         if (monsterHealth <= 0)
         {
@@ -164,12 +204,14 @@ public class MonsterAIfight : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        // This is for sword collision detection (if you have a weapon collider)
         if (other.CompareTag("Weapon") || other.GetComponent<SwordCollision>() != null)
         {
             SwordCollision sword = other.GetComponent<SwordCollision>();
             if (sword != null)
             {
-                Debug.Log("Monster detected sword collision!");
+                Debug.Log($"[{gameObject.name}] Detected sword collision!");
+                // You can add additional damage logic here if needed
             }
         }
     }
@@ -177,7 +219,7 @@ public class MonsterAIfight : MonoBehaviour
     private void Die()
     {
         monsterIsDead = true;
-        Debug.Log("<color=yellow>========== MONSTER DEFEATED ==========</color>");
+        Debug.Log($"<color=yellow>========== [{gameObject.name}] MONSTER DEFEATED ==========</color>");
 
         if (m_Agent != null)
         {
@@ -189,28 +231,37 @@ public class MonsterAIfight : MonoBehaviour
         {
             m_Animator.SetBool("isAttacking", false);
             m_Animator.SetBool("isWalking", false);
-            
+
             if (HasParameter(m_Animator, "Death"))
             {
                 m_Animator.SetTrigger("Death");
+                Debug.Log($"[{gameObject.name}] Death trigger activated");
             }
             else if (HasParameter(m_Animator, "IsDead"))
             {
                 m_Animator.SetBool("IsDead", true);
+                Debug.Log($"[{gameObject.name}] IsDead bool set to true");
             }
             else if (HasParameter(m_Animator, "Dead"))
             {
                 m_Animator.SetBool("Dead", true);
+                Debug.Log($"[{gameObject.name}] Dead bool set to true");
             }
             else
             {
-                Debug.LogWarning("No death animation parameter found in animator!");
+                Debug.LogWarning($"[{gameObject.name}] No death animation parameter found!");
             }
+        }
+
+        // Disable collider so player can't attack dead monster
+        if (monsterCollider != null)
+        {
+            monsterCollider.enabled = false;
         }
 
         StartCoroutine(TriggerGameWin());
     }
-    
+
     private bool HasParameter(Animator animator, string paramName)
     {
         foreach (AnimatorControllerParameter param in animator.parameters)
@@ -306,6 +357,20 @@ public class MonsterAIfight : MonoBehaviour
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, Target.position);
+        }
+
+        // Draw health bar in editor
+        if (Application.isPlaying)
+        {
+            Vector3 healthBarPos = transform.position + Vector3.up * 2.5f;
+            float healthPercent = monsterHealth / monsterMaxHealth;
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(healthBarPos - Vector3.right * 0.5f, healthBarPos + Vector3.right * 0.5f);
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(healthBarPos - Vector3.right * 0.5f,
+                           healthBarPos + Vector3.right * (healthPercent - 0.5f));
         }
     }
 }
