@@ -138,7 +138,7 @@ public class PlayerAttack : MonoBehaviour
         Collider[] enemies = Physics.OverlapSphere(transform.position, combatDetectionRange, enemyLayer);
         
         bool wasNearEnemy = isNearEnemy;
-        isNearEnemy = enemies.Length > 0;
+        isNearEnemy = enemies.Length > 0; 
         
         if (isNearEnemy)
         {
