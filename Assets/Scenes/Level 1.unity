@@ -928,7 +928,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3203261902030645159, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
   m_PrefabInstance: {fileID: 2020587051}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &366316833
+--- !u!114 &366316831
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4521,7 +4521,7 @@ MonoBehaviour:
   musicSource: {fileID: 1951494627}
   sfxSource: {fileID: 0}
   mainMenuMusic: {fileID: 0}
-  level1Music: {fileID: 0}
+  levelMusic: {fileID: 0}
 --- !u!1001 &1963133569
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4880,7 +4880,7 @@ PrefabInstance:
       addedObject: {fileID: 1870704408}
     - targetCorrespondingSourceObject: {fileID: 3203261902030645159, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 366316833}
+      addedObject: {fileID: 366316831}
     - targetCorrespondingSourceObject: {fileID: 974238578668270704, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2020587056}
