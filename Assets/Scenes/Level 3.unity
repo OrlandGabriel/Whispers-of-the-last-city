@@ -541,7 +541,7 @@ MonoBehaviour:
   monsterLayer:
     serializedVersion: 2
     m_Bits: 128
-  combatDetectionRange: 15
+  combatDetectionRange: 2
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -5809,6 +5809,8 @@ MonoBehaviour:
   cursorInputForLook: 0
   mobileInput: {fileID: 1275305431}
   useMobileInput: 1
+  enableTouchLook: 1
+  touchSensitivity: 0.15
 --- !u!4 &3561202352931720179
 Transform:
   m_ObjectHideFlags: 0
