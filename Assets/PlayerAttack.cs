@@ -70,26 +70,30 @@ public class PlayerAttack : MonoBehaviour
         {
             Debug.Log($"Attack input detected!");
             
+            // Check if not in combat stance first
+            if (!isInCombatStance)
+            {
+                Debug.Log("Cannot attack - not in combat mode!");
+                return;
+            }
+            
+            // Check for interaction (prioritize interaction over attack)
+            if (TryInteract())
+            {
+                Debug.Log("Interaction triggered instead of attack");
+                return;
+            }
+            
+            // Check cooldown AFTER triggering animation for responsive feel
             if (Time.time >= nextAttackTime)
             {
-                if (!isInCombatStance)
-                {
-                    Debug.Log("Cannot attack - not in combat mode!");
-                    return;
-                }
-                
-                if (TryInteract())
-                {
-                    Debug.Log("Interaction triggered instead of attack");
-                    return;
-                }
-                
                 Attack();
                 nextAttackTime = Time.time + attackCooldown;
             }
             else
             {
-                Debug.Log("Attack on cooldown!");
+                Debug.Log("Attack on cooldown - animation will play when ready!");
+                // Optionally play a "blocked" animation or sound here
             }
         }
         
@@ -196,10 +200,11 @@ public class PlayerAttack : MonoBehaviour
     {
         Debug.Log("========== ATTACK STARTED ==========");
         
+        // Trigger animation immediately on button press
         if (animator != null)
         {
             animator.SetTrigger("Attack 01");
-            Debug.Log("Attack 01 trigger SET");
+            Debug.Log("Attack 01 trigger SET - Animation playing NOW!");
         }
         
         if (nearestMonster != null)
