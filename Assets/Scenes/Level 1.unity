@@ -1018,6 +1018,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 0}
+  volume: 1
 --- !u!1 &479541027
 GameObject:
   m_ObjectHideFlags: 0
@@ -1611,6 +1613,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 8300000, guid: 43bdf6d30bca743dcb295f545312e5b7, type: 3}
+  volume: 1
 --- !u!65 &665946520
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1811,6 +1815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 8300000, guid: 43bdf6d30bca743dcb295f545312e5b7, type: 3}
+  volume: 1
 --- !u!1 &748618207
 GameObject:
   m_ObjectHideFlags: 0
@@ -3189,6 +3195,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 8300000, guid: 43bdf6d30bca743dcb295f545312e5b7, type: 3}
+  volume: 1
 --- !u!65 &1377526070
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4619,6 +4627,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 8300000, guid: 43bdf6d30bca743dcb295f545312e5b7, type: 3}
+  volume: 1
 --- !u!65 &2017795945
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4952,6 +4962,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
   attackDamage: 1
   attackCooldown: 0.5
+  attackRange: 3
   monsterLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -4959,12 +4970,9 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
-  interactionRange: 5
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 128
   attackEffect: {fileID: 0}
   mobileInput: {fileID: 0}
+  showDebugLogs: 1
 --- !u!114 &2020587056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4980,6 +4988,9 @@ MonoBehaviour:
   health: 20
   maxHealth: 20
   maxTotalHealth: 20
+  invulnerable: 0
+  invulnerabilityDuration: 0.5
+  showDebugLogs: 1
 --- !u!4 &2020587057 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 490576248761790154, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
@@ -5159,6 +5170,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe8cbac71bfa57448fde780591489db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Book
+  pickupSound: {fileID: 8300000, guid: 43bdf6d30bca743dcb295f545312e5b7, type: 3}
+  volume: 1
 --- !u!65 &2031490486
 BoxCollider:
   m_ObjectHideFlags: 0

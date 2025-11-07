@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class Book : MonoBehaviour
 {
+    [Header("Sound Settings")]
+    [SerializeField] private AudioClip pickupSound;  // The sound that plays when the book is picked up
+    [SerializeField] private float volume = 1f;      // Volume control for the sound
+
     private void Start()
     {
         Debug.Log("Book initialized: " + gameObject.name);
@@ -26,6 +30,13 @@ public class Book : MonoBehaviour
         if (playerInventory != null)
         {
             Debug.Log("Player collected the book!");
+
+            // 🎵 Play pickup sound at the book’s position
+            if (pickupSound != null)
+            {
+                AudioSource.PlayClipAtPoint(pickupSound, transform.position, volume);
+            }
+
             playerInventory.PagesCollected();
             gameObject.SetActive(false);
         }
