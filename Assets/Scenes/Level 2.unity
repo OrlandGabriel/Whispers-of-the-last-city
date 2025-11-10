@@ -1542,6 +1542,7 @@ MonoBehaviour:
   sfxSource: {fileID: 0}
   mainMenuMusic: {fileID: 0}
   levelMusic: {fileID: 0}
+  level2Music: {fileID: 8300000, guid: e4d3e974a453d45f3aaeef3c6df02a4a, type: 3}
 --- !u!82 &257429628
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3748,6 +3749,55 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!1 &439242796
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 439242798}
+  - component: {fileID: 439242797}
+  m_Layer: 0
+  m_Name: MusicManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &439242797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439242796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f402d989136ed4f0e8d50152aba2a7d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MusicManager
+  musicSource: {fileID: 0}
+  sfxSource: {fileID: 0}
+  mainMenuMusic: {fileID: 0}
+  levelMusic: {fileID: 0}
+  level2Music: {fileID: 0}
+--- !u!4 &439242798
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439242796}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1238.2349, y: 529.4637, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &452101523
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3938,6 +3988,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
   attackDamage: 1
   attackCooldown: 0.5
+  attackRange: 3
   monsterLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -3945,12 +3996,9 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
-  interactionRange: 5
-  interactableLayer:
-    serializedVersion: 2
-    m_Bits: 128
   attackEffect: {fileID: 0}
   mobileInput: {fileID: 0}
+  showDebugLogs: 1
 --- !u!114 &452101527
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3966,6 +4014,9 @@ MonoBehaviour:
   health: 20
   maxHealth: 20
   maxTotalHealth: 20
+  invulnerable: 0
+  invulnerabilityDuration: 0.5
+  showDebugLogs: 1
 --- !u!4 &452101528 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 490576248761790154, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
@@ -20925,6 +20976,7 @@ SceneRoots:
   - {fileID: 1661921013}
   - {fileID: 582287128}
   - {fileID: 1579590973}
+  - {fileID: 439242798}
   - {fileID: 265661489}
   - {fileID: 257429629}
   - {fileID: 462390555}

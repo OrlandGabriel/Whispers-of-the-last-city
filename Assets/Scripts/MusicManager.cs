@@ -11,7 +11,9 @@ public class MusicManager : MonoBehaviour
 
     [Header("Music Clips")]
     [SerializeField] private AudioClip mainMenuMusic;
-    [SerializeField] private AudioClip levelMusic; // Used for all game levels
+    [SerializeField] private AudioClip levelMusic; // default level music
+    [SerializeField] private AudioClip level2Music;
+    [SerializeField] private AudioClip level3Music;
 
     void Awake()
     {
@@ -37,7 +39,6 @@ public class MusicManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Ignore additive loads
         if (mode == LoadSceneMode.Additive)
             return;
 
@@ -47,22 +48,28 @@ public class MusicManager : MonoBehaviour
         if (sceneName.Contains("cutscene"))
             return;
 
-        // Only switch music if we’re in main menu or game
         if (sceneName.Contains("main"))
         {
-            // If we're already playing this track, don't restart
             if (musicSource.clip != mainMenuMusic)
                 PlayMusic(mainMenuMusic);
         }
+        else if (sceneName.Contains("level3"))
+        {
+            if (musicSource.clip != level3Music)
+                PlayMusic(level3Music);
+        }
+        else if (sceneName.Contains("level2"))
+        {
+            if (musicSource.clip != level2Music)
+                PlayMusic(level2Music);
+        }
         else if (sceneName.Contains("level"))
         {
-            // If we're already playing the same level track, don't restart
             if (musicSource.clip != levelMusic)
                 PlayMusic(levelMusic);
         }
         else
         {
-            // Default behavior — continue playing current track
             if (!musicSource.isPlaying)
                 musicSource.Play();
         }
@@ -73,7 +80,6 @@ public class MusicManager : MonoBehaviour
         if (musicSource == null || clip == null)
             return;
 
-        // Already playing this clip? do nothing
         if (musicSource.clip == clip && musicSource.isPlaying)
             return;
 
