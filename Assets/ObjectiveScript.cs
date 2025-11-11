@@ -22,12 +22,27 @@ public class ObjectiveScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+        GameObject[] books = GameObject.FindGameObjectsWithTag("Book");
+
+        if (books.Length == 0 )
+        {
+            ChildText1.text = "After collecting all pages find the entrance to the dungeon.";
+            ObjectiveParentText.enabled = true;
+            ChildText1.enabled = true;
+
+            ChildText2.enabled = false;
+            ChildText3.enabled = false;
+            isTextVisible = true;
+        }
+
+
         if (Input.GetKeyDown(KeyCode.F) && canPressF)
         {
             if (changedonce == false)
             {
                 changedonce = true;
-                
+
                 // Start the hide/show sequence
                 StartCoroutine(HideShowSequence());
             }
@@ -88,7 +103,7 @@ public class ObjectiveScript : MonoBehaviour
         ChildText2.enabled = true;
         ChildText3.enabled = true;
     }
-    
+
     void HideText()
     {
         ObjectiveParentText.enabled = false;
@@ -96,4 +111,5 @@ public class ObjectiveScript : MonoBehaviour
         ChildText2.enabled = false;
         ChildText3.enabled = false;
     }
+
 }

@@ -9,6 +9,7 @@ TagManager:
   - LevelExit
   - monster
   - Monster
+  - Book
   layers:
   - Default
   - TransparentFX
