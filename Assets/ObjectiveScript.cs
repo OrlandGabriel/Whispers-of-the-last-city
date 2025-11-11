@@ -13,29 +13,23 @@ public class ObjectiveScript : MonoBehaviour
     bool canPressF = true;
     bool sequenceComplete = false;
     bool isTextVisible = false;
-    
+
     void Start()
     {
         // Text is visible at start (showing initial objective)
     }
     
+
+
+    
     // Update is called once per frame
     void Update()
     {
 
-        GameObject[] books = GameObject.FindGameObjectsWithTag("Book");
-
-        if (books.Length == 0 )
+        if(SceneManager.GetActiveScene().name == "Level 1")
         {
-            ChildText1.text = "After collecting all pages find the entrance to the dungeon.";
-            ObjectiveParentText.enabled = true;
-            ChildText1.enabled = true;
-
-            ChildText2.enabled = false;
-            ChildText3.enabled = false;
-            isTextVisible = true;
+            level_1_books_collected_condition();
         }
-
 
         if (Input.GetKeyDown(KeyCode.F) && canPressF)
         {
@@ -79,7 +73,7 @@ public class ObjectiveScript : MonoBehaviour
         ShowText();
         ObjectiveParentText.text = "New Objective";
         ChildText1.text = "Collect all 5 Pages";
-        ChildText2.text = "After collecting all pages find the entrance to the dungeon.";
+        ChildText2.text = "After collecting all pages find the entrance to the maze.";
         ChildText3.text = "Press Tab or Obj Bar to reveal the objectives";
         isTextVisible = true;
         
@@ -110,6 +104,23 @@ public class ObjectiveScript : MonoBehaviour
         ChildText1.enabled = false;
         ChildText2.enabled = false;
         ChildText3.enabled = false;
+    }
+
+
+    public void level_1_books_collected_condition()
+    {
+        GameObject[] books = GameObject.FindGameObjectsWithTag("Book");
+
+        if (books.Length == 0 )
+        {
+            ChildText1.text = "After collecting all pages find the entrance to the dungeon.";
+            ObjectiveParentText.enabled = true;
+            ChildText1.enabled = true;
+
+            ChildText2.enabled = false;
+            ChildText3.enabled = false;
+            isTextVisible = true;
+        }
     }
 
 }
