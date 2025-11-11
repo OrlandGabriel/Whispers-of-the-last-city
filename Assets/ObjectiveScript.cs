@@ -115,7 +115,7 @@ public class ObjectiveScript : MonoBehaviour
 
         if (books.Length == 0 )
         {
-            ChildText1.text = "After collecting all pages find the entrance to the dungeon.";
+            ChildText1.text = "After collecting all pages find the entrance to the maze.";
             ObjectiveParentText.enabled = true;
             ChildText1.enabled = true;
 
