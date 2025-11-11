@@ -4530,6 +4530,8 @@ MonoBehaviour:
   sfxSource: {fileID: 0}
   mainMenuMusic: {fileID: 0}
   levelMusic: {fileID: 0}
+  level2Music: {fileID: 0}
+  level3Music: {fileID: 0}
 --- !u!1001 &1963133569
 PrefabInstance:
   m_ObjectHideFlags: 0

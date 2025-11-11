@@ -618,7 +618,9 @@ MonoBehaviour:
   musicSource: {fileID: 387533496}
   sfxSource: {fileID: 387533498}
   mainMenuMusic: {fileID: 8300000, guid: 1088f8a6adce94066b5d3d470cbb4043, type: 3}
-  level1Music: {fileID: 8300000, guid: 8b6334c33715aa34aa1f6408203692f2, type: 3}
+  levelMusic: {fileID: 8300000, guid: 8b6334c33715aa34aa1f6408203692f2, type: 3}
+  level2Music: {fileID: 8300000, guid: e4d3e974a453d45f3aaeef3c6df02a4a, type: 3}
+  level3Music: {fileID: 8300000, guid: 9df295454b44d4b16bc77a52bafccf54, type: 3}
 --- !u!82 &387533496
 AudioSource:
   m_ObjectHideFlags: 0

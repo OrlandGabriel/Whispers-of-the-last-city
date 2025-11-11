@@ -1976,7 +1976,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1112594341}
   - component: {fileID: 1112594340}
-  - component: {fileID: 1112594339}
   m_Layer: 0
   m_Name: BackgroundMusic
   m_TagString: Music
@@ -1984,24 +1983,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1112594339
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1112594338}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f402d989136ed4f0e8d50152aba2a7d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MusicManager
-  musicSource: {fileID: 1112594340}
-  sfxSource: {fileID: 0}
-  mainMenuMusic: {fileID: 0}
-  levelMusic: {fileID: 0}
-  level2Music: {fileID: 8300000, guid: e4d3e974a453d45f3aaeef3c6df02a4a, type: 3}
-  level3Music: {fileID: 8300000, guid: 9df295454b44d4b16bc77a52bafccf54, type: 3}
 --- !u!82 &1112594340
 AudioSource:
   m_ObjectHideFlags: 0

@@ -15,65 +15,74 @@ public class MusicManager : MonoBehaviour
     [SerializeField] private AudioClip level2Music;
     [SerializeField] private AudioClip level3Music;
 
-    void Awake()
+void Awake()
+{
+    Debug.Log("MusicManager Awake called in scene: " + SceneManager.GetActiveScene().name);
+    
+    if (instance == null)
     {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
+        Debug.Log("First instance - keeping this MusicManager");
+        instance = this;
+        DontDestroyOnLoad(gameObject);
 
-            SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
 
-            float musicVol = PlayerPrefs.GetFloat("MusicVolume", 0.5f);
-            float sfxVol = PlayerPrefs.GetFloat("SFXVolume", 0.5f);
+        float musicVol = PlayerPrefs.GetFloat("MusicVolume", 0.5f);
+        float sfxVol = PlayerPrefs.GetFloat("SFXVolume", 0.5f);
 
-            SetMusicVolume(musicVol);
-            SetSFXVolume(sfxVol);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        SetMusicVolume(musicVol);
+        SetSFXVolume(sfxVol);
     }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    else
     {
-        if (mode == LoadSceneMode.Additive)
-            return;
-
-        string sceneName = scene.name.ToLower();
-
-        // Cutscene scenes: no music change
-        if (sceneName.Contains("cutscene"))
-            return;
-
-        if (sceneName.Contains("main"))
-        {
-            if (musicSource.clip != mainMenuMusic)
-                PlayMusic(mainMenuMusic);
-        }
-        else if (sceneName.Contains("level3"))
-        {
-            if (musicSource.clip != level3Music)
-                PlayMusic(level3Music);
-        }
-        else if (sceneName.Contains("level2"))
-        {
-            if (musicSource.clip != level2Music)
-                PlayMusic(level2Music);
-        }
-        else if (sceneName.Contains("level"))
-        {
-            if (musicSource.clip != levelMusic)
-                PlayMusic(levelMusic);
-        }
-        else
-        {
-            if (!musicSource.isPlaying)
-                musicSource.Play();
-        }
+        Debug.Log("Duplicate found - destroying this MusicManager");
+        Destroy(gameObject);
+        return;
     }
+}
+
+private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+{
+    if (mode == LoadSceneMode.Additive)
+        return;
+
+    string sceneName = scene.name.ToLower().Trim();
+    Debug.Log("Scene Loaded: " + sceneName);
+
+    // Stop any previous music
+    StopMusic();
+
+    // Ignore cutscenes
+    if (sceneName.Contains("cutscene"))
+        return;
+
+    if (sceneName.Contains("main"))
+    {
+        Debug.Log("Playing Main Menu Music");
+        PlayMusic(mainMenuMusic);
+    }
+    else if (sceneName.Contains("level 3"))
+    {
+        Debug.Log("Playing Level 3 Music");
+        PlayMusic(level3Music);
+    }
+    else if (sceneName.Contains("level 2"))
+    {
+        Debug.Log("Playing Level 2 Music");
+        PlayMusic(level2Music);
+    }
+    else if (sceneName.Contains("level 1") || sceneName.Contains("level"))
+    {
+        Debug.Log("Playing Default Level Music");
+        PlayMusic(levelMusic);
+    }
+    else
+    {
+        Debug.Log("No specific match — resuming last music if available");
+        if (!musicSource.isPlaying)
+            musicSource.Play();
+    }
+}
 
     public void PlayMusic(AudioClip clip)
     {
